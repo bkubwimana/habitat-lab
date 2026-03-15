@@ -1,0 +1,27 @@
+# @package _global_
+#
+# Track D Phase 2: Pereason + Go + Fabric communication.
+
+defaults:
+  - pereason_go
+  - _self_
+
+habitat_baselines:
+  rl:
+    policy:
+      agent_0:
+        hierarchical_policy:
+          high_level_policy:
+            name: "PereasonGoFabricPolicy"
+            fabric:
+              enabled: True
+              msg_dim: 128
+              num_heads: 4
+      agent_1:
+        hierarchical_policy:
+          high_level_policy:
+            name: "PereasonGoFabricPolicy"
+            fabric:
+              enabled: True
+              msg_dim: 128
+              num_heads: 4

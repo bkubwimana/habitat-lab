@@ -110,14 +110,43 @@ class PPO(nn.Module, Updater):
         ]
 
     def _create_optimizer(self, lr, eps):
-        params = list(filter(lambda p: p.requires_grad, self.parameters()))
+        params_or_groups = None
+        if hasattr(self.actor_critic, "get_optimizer_param_groups"):
+            raw_groups = self.actor_critic.get_optimizer_param_groups(lr)
+            if raw_groups:
+                filtered_groups = []
+                grouped_params = []
+                for group in raw_groups:
+                    group_params = [
+                        p for p in group["params"] if p.requires_grad
+                    ]
+                    if not group_params:
+                        continue
+                    new_group = {k: v for k, v in group.items() if k != "params"}
+                    new_group["params"] = group_params
+                    grouped_params.extend(group_params)
+                    filtered_groups.append(new_group)
+                if filtered_groups:
+                    params_or_groups = filtered_groups
+                    params = grouped_params
+                else:
+                    params = []
+            else:
+                params = []
+        else:
+            params = []
+
+        if params_or_groups is None:
+            params = list(filter(lambda p: p.requires_grad, self.parameters()))
+            params_or_groups = params
+
         logger.info(
             f"Number of params to train: {sum(param.numel() for param in params)}"
         )
         if len(params) > 0:
             optim_cls = optim.Adam
             optim_kwargs = dict(
-                params=params,
+                params=params_or_groups,
                 lr=lr,
                 eps=eps,
             )
@@ -381,4 +410,10 @@ class PPO(nn.Module, Updater):
 
     def load_state_dict(self, state):
         if "optim_state" in state:
-            self.optimizer.load_state_dict(state["optim_state"])
+            try:
+                self.optimizer.load_state_dict(state["optim_state"])
+            except (ValueError, RuntimeError) as e:
+                logger.warning(
+                    f"Optimizer state mismatch (architecture change?), "
+                    f"resetting optimizer: {e}"
+                )

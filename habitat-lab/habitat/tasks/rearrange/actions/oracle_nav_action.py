@@ -172,10 +172,9 @@ class OracleNavAction(BaseVelAction, HumanoidJointAction):
         curr_path_points = self._path_to_point(final_nav_targ)
         robot_pos = np.array(self.cur_articulated_agent.base_pos)
 
-        if curr_path_points is None:
-            raise Exception
+        if curr_path_points is None or len(curr_path_points) < 2:
+            return
         else:
-            # Compute distance and angle to target
             cur_nav_targ = np.array(curr_path_points[1])
             forward = np.array([1.0, 0, 0])
             robot_forward = np.array(base_T.transform_vector(forward))

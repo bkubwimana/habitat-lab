@@ -577,9 +577,20 @@ class RearrangeSim(HabitatSim):
             )
             regen_i += 1
 
-        assert not np.isnan(
-            new_pos[0]
-        ), f"The snap position is NaN. scene_id: {self.ep_info.scene_id}, new position: {new_pos}, original position: {pos}"
+        if np.isnan(new_pos[0]):
+            logger.warning(
+                f"safe_snap_point failed for scene {self.ep_info.scene_id}, "
+                f"pos={pos}. Falling back to any navigable point."
+            )
+            new_pos = self.pathfinder.get_random_navigable_point(
+                island_index=self._largest_indoor_island_idx
+            )
+        if np.isnan(new_pos[0]):
+            logger.error(
+                f"No navigable point found at all for scene {self.ep_info.scene_id}. "
+                f"Using original position {pos} as fallback."
+            )
+            new_pos = pos
 
         return np.array(new_pos)
 

@@ -243,6 +243,7 @@ class VectorEnv:
         parent_pipe: Optional[Connection] = None,
     ) -> None:
         r"""process worker for creating and interacting with the environment."""
+
         if mask_signals:
             signal.signal(signal.SIGINT, signal.SIG_IGN)
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -295,6 +296,11 @@ class VectorEnv:
 
         except KeyboardInterrupt:
             logger.info("Worker KeyboardInterrupt")
+        except Exception as e:
+            import traceback, sys
+            logger.error(f"Worker crashed: {e}")
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
         finally:
             if child_pipe is not None:
                 child_pipe.close()

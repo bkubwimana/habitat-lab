@@ -136,6 +136,9 @@ class HighLevelPolicy(nn.Module):
 
         return []
 
+    def get_optimizer_param_groups(self, base_lr: float):
+        return None
+
     def get_termination(
         self,
         observations,

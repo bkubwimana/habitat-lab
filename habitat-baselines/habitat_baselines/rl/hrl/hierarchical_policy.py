@@ -233,6 +233,9 @@ class HierarchicalPolicy(nn.Module, Policy):
     def parameters(self):
         return self._high_level_policy.parameters()
 
+    def get_optimizer_param_groups(self, base_lr: float):
+        return self._high_level_policy.get_optimizer_param_groups(base_lr)
+
     def to(self, device):
         self._high_level_policy.to(device)
         for skill in self._skills.values():
