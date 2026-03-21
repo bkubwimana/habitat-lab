@@ -7,6 +7,7 @@ defaults:
   - _self_
 
 habitat_baselines:
+  num_environments: 32
   rl:
     policy:
       agent_0:

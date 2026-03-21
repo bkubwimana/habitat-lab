@@ -174,14 +174,10 @@ class PPOTrainer(BaseRLTrainer):
             resume_state = load_resume_state(self.config)
 
         if resume_state is not None:
-            if not self.config.habitat_baselines.load_resume_state_config:
-                raise FileExistsError(
-                    f"The configuration provided has habitat_baselines.load_resume_state_config=False but a previous training run exists. You can either delete the checkpoint folder {self.config.habitat_baselines.checkpoint_folder}, or change the configuration key habitat_baselines.checkpoint_folder in your new run."
+            if self.config.habitat_baselines.load_resume_state_config:
+                self.config = self._get_resume_state_config_or_new_config(
+                    resume_state["config"]
                 )
-
-            self.config = self._get_resume_state_config_or_new_config(
-                resume_state["config"]
-            )
 
         if self.config.habitat_baselines.rl.ddppo.force_distributed:
             self._is_distributed = True
@@ -255,7 +251,7 @@ class PPOTrainer(BaseRLTrainer):
 
         self._agent = self._create_agent(resume_state)
         if self._is_distributed:
-            self._agent.init_distributed(find_unused_params=False)  # type: ignore
+            self._agent.init_distributed(find_unused_params=True)  # type: ignore
         self._agent.post_init()
 
         self._is_static_encoder = (
@@ -338,6 +334,7 @@ class PPOTrainer(BaseRLTrainer):
         Returns:
             dict containing checkpoint info
         """
+        kwargs.setdefault("weights_only", False)
         return torch.load(checkpoint_path, *args, **kwargs)
 
     def _compute_actions_and_step_envs(self, buffer_index: int = 0):
@@ -795,6 +792,25 @@ class PPOTrainer(BaseRLTrainer):
                         ),
                     )
                     count_checkpoints += 1
+
+                    requeue_stats = dict(
+                        count_checkpoints=count_checkpoints,
+                        num_steps_done=self.num_steps_done,
+                        num_updates_done=self.num_updates_done,
+                        _last_checkpoint_percent=self._last_checkpoint_percent,
+                        prev_time=(time.time() - self.t_start) + prev_time,
+                        running_episode_stats=self.running_episode_stats,
+                        window_episode_stats=dict(self.window_episode_stats),
+                        run_id=writer.get_run_id(),
+                    )
+                    save_resume_state(
+                        dict(
+                            **self._agent.get_resume_state(),
+                            config=self.config,
+                            requeue_stats=requeue_stats,
+                        ),
+                        self.config,
+                    )
 
                 profiling_wrapper.range_pop()  # train update
 

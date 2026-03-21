@@ -58,10 +58,10 @@ habitat_baselines:
 
   num_environments: 8
   num_updates: -1
-  total_num_steps: 5e7
+  total_num_steps: 1e8
   log_interval: 1
   num_checkpoints: -1
-  checkpoint_interval: 100
+  checkpoint_interval: 10
   force_torch_single_threaded: True
   eval_keys_to_include_in_name: ['pddl_success']
   load_resume_state_config: False
