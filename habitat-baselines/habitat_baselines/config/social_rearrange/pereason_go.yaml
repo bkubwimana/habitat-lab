@@ -1,6 +1,6 @@
 # @package _global_
 #
-# Track D Phase 1: Pereason (frozen VLM + depth encoder) + Go (transformer skill selector)
+# Track D Phase 1: Pereason (frozen VLM + trainable depth encoder) + Go (transformer skill selector)
 # No Fabric (inter-agent communication) — that's Phase 2.
 
 defaults:
@@ -19,6 +19,13 @@ defaults:
   - _self_
 
 habitat:
+  task:
+    num_spawn_attempts: 8
+    actions:
+      agent_0_oracle_nav_action:
+        num_spawn_attempts: 8
+      agent_1_oracle_nav_action:
+        num_spawn_attempts: 8
   gym:
     obs_keys:
       - agent_0_articulated_agent_arm_rgb
@@ -58,10 +65,10 @@ habitat_baselines:
 
   num_environments: 8
   num_updates: -1
-  total_num_steps: 5e7
+  total_num_steps: 1e8
   log_interval: 1
   num_checkpoints: -1
-  checkpoint_interval: 100
+  checkpoint_interval: 10
   force_torch_single_threaded: True
   eval_keys_to_include_in_name: ['pddl_success']
   load_resume_state_config: False
@@ -74,6 +81,8 @@ habitat_baselines:
     video_option: ["disk"]
 
   rl:
+    preemption:
+      save_resume_state_interval: 10
     agent:
       type: "MultiAgentAccessMgr"
       num_agent_types: 2
@@ -150,7 +159,7 @@ habitat_baselines:
     ppo:
       clip_param: 0.2
       ppo_epoch: 2
-      num_mini_batch: 2
+      num_mini_batch: 10
       value_loss_coef: 0.5
       entropy_coef: 0.001
       lr: 1e-4

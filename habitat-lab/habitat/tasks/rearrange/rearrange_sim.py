@@ -554,45 +554,29 @@ class RearrangeSim(HabitatSim):
         """
         Returns the 3D coordinates corresponding to a point belonging
         to the biggest navmesh island in the scene and closest to pos.
-        When that point returns NaN, computes a navigable point at increasing
-        distances to it.
+        Falls back quickly when snapping fails to avoid long reset stalls.
         """
         new_pos = self.pathfinder.snap_point(
             pos, self._largest_indoor_island_idx
         )
+        if not np.isnan(new_pos[0]):
+            return np.array(new_pos)
 
-        max_iter = 10
-        offset_distance = 1.5
-        distance_per_iter = 0.5
-        num_sample_points = 1000
-
-        regen_i = 0
-        while np.isnan(new_pos[0]) and regen_i < max_iter:
-            # Increase the search radius
-            new_pos = self.pathfinder.get_random_navigable_point_near(
-                pos,
-                offset_distance + regen_i * distance_per_iter,
-                num_sample_points,
-                island_index=self._largest_indoor_island_idx,
-            )
-            regen_i += 1
-
-        if np.isnan(new_pos[0]):
-            logger.warning(
-                f"safe_snap_point failed for scene {self.ep_info.scene_id}, "
-                f"pos={pos}. Falling back to any navigable point."
-            )
-            new_pos = self.pathfinder.get_random_navigable_point(
-                island_index=self._largest_indoor_island_idx
-            )
-        if np.isnan(new_pos[0]):
+        logger.warning(
+            f"safe_snap_point failed for scene {self.ep_info.scene_id}, "
+            f"pos={pos}. Falling back to any navigable point."
+        )
+        fallback = self.pathfinder.get_random_navigable_point(
+            island_index=self._largest_indoor_island_idx
+        )
+        if np.isnan(fallback[0]):
             logger.error(
                 f"No navigable point found at all for scene {self.ep_info.scene_id}. "
                 f"Using original position {pos} as fallback."
             )
-            new_pos = pos
+            return np.array(pos)
 
-        return np.array(new_pos)
+        return np.array(fallback)
 
     @add_perf_timing_func()
     def _add_objs(

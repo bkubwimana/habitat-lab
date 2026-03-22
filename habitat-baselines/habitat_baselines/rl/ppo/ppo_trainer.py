@@ -174,14 +174,17 @@ class PPOTrainer(BaseRLTrainer):
             resume_state = load_resume_state(self.config)
 
         if resume_state is not None:
-            if not self.config.habitat_baselines.load_resume_state_config:
-                raise FileExistsError(
-                    f"The configuration provided has habitat_baselines.load_resume_state_config=False but a previous training run exists. You can either delete the checkpoint folder {self.config.habitat_baselines.checkpoint_folder}, or change the configuration key habitat_baselines.checkpoint_folder in your new run."
+            if self.config.habitat_baselines.load_resume_state_config:
+                self.config = self._get_resume_state_config_or_new_config(
+                    resume_state["config"]
                 )
-
-            self.config = self._get_resume_state_config_or_new_config(
-                resume_state["config"]
-            )
+            else:
+                logger.info(
+                    "Resuming with NEW config (load_resume_state_config=False). "
+                    "Model weights and optimizer state will be loaded from checkpoint, "
+                    "but training parameters (total_num_steps, checkpoint_interval, etc.) "
+                    "come from the current config."
+                )
 
         if self.config.habitat_baselines.rl.ddppo.force_distributed:
             self._is_distributed = True
