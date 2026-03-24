@@ -1,6 +1,6 @@
 # @package _global_
-# Coordinated social rearrangement: PDDL planner + DSM-based yield logic.
-# Uses CoordinatedNavAction instead of OracleNavAction for agent-agent avoidance.
+# Trained RL policy + CollabTime CoordinatedNavAction for collision avoidance.
+# High-level decisions are neural (from checkpoint), nav uses DSM-based yield.
 
 defaults:
   - /benchmark/multi_agent: hssd_spot_human
@@ -10,13 +10,12 @@ defaults:
     - add_virtual_keys_base
   - /habitat_baselines/rl/policy/obs_transforms@habitat_baselines.rl.policy.agent_1.obs_transforms.add_virtual_keys:
     - add_virtual_keys_base
-  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_0: hl_planner
-  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_1: hl_planner
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_0: hl_neural_multi_agent
+  - /habitat_baselines/rl/policy@habitat_baselines.rl.policy.agent_1: hl_neural_multi_agent
   - /habitat_baselines/rl/policy/hierarchical_policy/defined_skills@habitat_baselines.rl.policy.agent_0.hierarchical_policy.defined_skills: oracle_skills_multi_agent
   - /habitat_baselines/rl/policy/hierarchical_policy/defined_skills@habitat_baselines.rl.policy.agent_1.hierarchical_policy.defined_skills: oracle_skills_human_multi_agent
   - /habitat/task/lab_sensors:
     - has_finished_oracle_nav
-    - all_predicates
   - _self_
 
 habitat:
@@ -31,33 +30,6 @@ habitat:
         type: CoordinatedNavAction
       agent_1_oracle_nav_action:
         type: CoordinatedNavAction
-  gym:
-    obs_keys:
-      - agent_0_articulated_agent_arm_depth
-      - agent_0_relative_resting_position
-      - agent_0_obj_start_sensor
-      - agent_0_obj_goal_sensor
-      - agent_0_obj_start_gps_compass
-      - agent_0_obj_goal_gps_compass
-      - agent_0_is_holding
-      - agent_0_ee_pos
-      - agent_0_localization_sensor
-      - agent_0_has_finished_oracle_nav
-      - agent_0_other_agent_gps
-      - agent_0_agents_within_threshold
-      - agent_1_head_depth
-      - agent_1_relative_resting_position
-      - agent_1_obj_start_sensor
-      - agent_1_obj_goal_sensor
-      - agent_1_obj_start_gps_compass
-      - agent_1_obj_goal_gps_compass
-      - agent_1_is_holding
-      - agent_1_ee_pos
-      - agent_1_localization_sensor
-      - agent_1_has_finished_oracle_nav
-      - agent_1_other_agent_gps
-      - agent_1_agents_within_threshold
-      - all_predicates
 
 habitat_baselines:
   verbose: False
@@ -78,7 +50,7 @@ habitat_baselines:
   evaluate: True
 
   eval:
-    should_load_ckpt: False
+    should_load_ckpt: True
     video_option: ["disk"]
 
   rl:
@@ -93,16 +65,16 @@ habitat_baselines:
       agent_0:
         hierarchical_policy:
           high_level_policy:
-            name: "CoordinatedPlannerPolicy"
-            plan_idx: 3
             termination_obs_name: "agents_within_threshold"
             add_arm_rest: False
-            allowed_actions:
-              - nav_to_goal
-              - nav_to_obj
-              - pick
-              - place
-              - nav_to_receptacle_by_name
+            policy_input_keys:
+              - "articulated_agent_arm_depth"
+              - "is_holding"
+              - "obj_start_gps_compass"
+              - "obj_goal_gps_compass"
+              - "other_agent_gps"
+              - "obj_start_sensor"
+              - "obj_goal_sensor"
           defined_skills:
             nav_to_obj:
               skill_name: "OracleNavPolicy"
@@ -111,10 +83,16 @@ habitat_baselines:
       agent_1:
         hierarchical_policy:
           high_level_policy:
-            name: "CoordinatedPlannerPolicy"
-            plan_idx: 3
             termination_obs_name: "agents_within_threshold"
             add_arm_rest: False
+            policy_input_keys:
+              - "head_depth"
+              - "is_holding"
+              - "obj_start_gps_compass"
+              - "obj_goal_gps_compass"
+              - "other_agent_gps"
+              - "obj_start_sensor"
+              - "obj_goal_sensor"
             allowed_actions:
               - nav_to_goal
               - nav_to_obj
