@@ -685,10 +685,18 @@ class PPOTrainer(BaseRLTrainer):
             count_checkpoints = requeue_stats["count_checkpoints"]
             prev_time = requeue_stats["prev_time"]
 
-            self.running_episode_stats = requeue_stats["running_episode_stats"]
-            self.window_episode_stats.update(
-                requeue_stats["window_episode_stats"]
-            )
+            if self.config.habitat_baselines.load_resume_state_config:
+                self.running_episode_stats = requeue_stats[
+                    "running_episode_stats"
+                ]
+                self.window_episode_stats.update(
+                    requeue_stats["window_episode_stats"]
+                )
+            else:
+                logger.info(
+                    "Skipping window_episode_stats restore (new config); "
+                    "logging stats will rebuild from scratch."
+                )
             resume_run_id = requeue_stats.get("run_id", None)
 
         with (
