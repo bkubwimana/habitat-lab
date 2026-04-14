@@ -273,7 +273,23 @@ class SingleAgentAccessMgr(AgentAccessMgr):
         self._actor_critic.load_state_dict(ckpt["state_dict"])
 
     def load_state_dict(self, state: Dict) -> None:
-        self._actor_critic.load_state_dict(state["state_dict"])
+        try:
+            self._actor_critic.load_state_dict(state["state_dict"])
+        except RuntimeError:
+            # Allow missing keys (e.g. newly added modules not in the checkpoint)
+            # but still raise on unexpected keys (wrong checkpoint / typo).
+            missing, unexpected = self._actor_critic.load_state_dict(
+                state["state_dict"], strict=False
+            )
+            if unexpected:
+                raise RuntimeError(
+                    f"Unexpected key(s) in checkpoint state_dict: {unexpected}"
+                )
+            if missing:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Freshly initialised (not in checkpoint): %s", missing
+                )
         if self._updater is not None:
             self._updater.load_state_dict(state)
             if "lr_sched_state" in state:

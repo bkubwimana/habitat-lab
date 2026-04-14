@@ -7,8 +7,11 @@ defaults:
   - _self_
 
 habitat_baselines:
-  num_environments: 32
+  num_environments: 8
   rl:
+    ppo:
+      use_linear_lr_decay: True
+      use_linear_clip_decay: True
     policy:
       agent_0:
         hierarchical_policy:
@@ -18,6 +21,7 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
+              dsm_enabled: True
       agent_1:
         hierarchical_policy:
           high_level_policy:
@@ -26,3 +30,4 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
+              dsm_enabled: True
