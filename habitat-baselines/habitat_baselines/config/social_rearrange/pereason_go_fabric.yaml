@@ -1,6 +1,12 @@
 # @package _global_
 #
-# Track D Phase 2: Pereason + Go + Fabric communication.
+# Study 2 / Study 3 configuration for Pereason + Go + Fabric (+ optional DSM).
+#
+# `fabric.dsm_stage` selects the DSM study stage:
+#   "none"   — Study 2 (Fabric only; matches the 76.8% Fabric baseline)
+#   "stage1" — Study 3 Stage 1: structured partner state as observations
+#   "stage2" — Study 3 Stage 2: learned projection w/ teacher (not yet)
+#   "stage3" — Study 3 Stage 3: learned recurrent DSM w/ BPTT (not yet)
 
 defaults:
   - pereason_go
@@ -21,7 +27,7 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
-              dsm_enabled: True
+              dsm_stage: "stage1"
       agent_1:
         hierarchical_policy:
           high_level_policy:
@@ -30,4 +36,4 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
-              dsm_enabled: True
+              dsm_stage: "stage1"
