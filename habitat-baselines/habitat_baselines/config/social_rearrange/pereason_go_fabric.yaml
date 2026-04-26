@@ -18,6 +18,10 @@ habitat_baselines:
     ppo:
       use_linear_lr_decay: True
       use_linear_clip_decay: True
+      # SHARM state lives in HRL's recurrent_hidden_states slot (sourced
+      # from ppo.hidden_size). 8 slots × 64 dim + 8 ages = 520 floats.
+      # Default 512 is too small; 720 leaves headroom.
+      hidden_size: 720
     policy:
       agent_0:
         hierarchical_policy:
