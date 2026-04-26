@@ -27,7 +27,16 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
-              dsm_stage: "stage1"
+              dsm_stage: "stage3"
+              sharm:
+                num_perception_slots: 4
+                num_task_slots: 2
+                num_intent_slots: 2
+                slot_dim: 64
+                decay_half_life: 100.0
+                recon_loss_start: 1.0
+                recon_loss_end: 0.0
+                recon_anneal_until: 0.5
       agent_1:
         hierarchical_policy:
           high_level_policy:
@@ -36,4 +45,13 @@ habitat_baselines:
               enabled: True
               msg_dim: 128
               num_heads: 4
-              dsm_stage: "stage1"
+              dsm_stage: "stage3"
+              sharm:
+                num_perception_slots: 4
+                num_task_slots: 2
+                num_intent_slots: 2
+                slot_dim: 64
+                decay_half_life: 100.0
+                recon_loss_start: 1.0
+                recon_loss_end: 0.0
+                recon_anneal_until: 0.5
