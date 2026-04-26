@@ -308,6 +308,18 @@ class SingleAgentAccessMgr(AgentAccessMgr):
             self._updater.clip_param = self._ppo_cfg.clip_param * (
                 1 - self._percent_done_fn()
             )
+        # Push training progress into any policy that exposes
+        # `update_aux_progress(percent_done)` so it can anneal aux-loss
+        # weights without a private back-channel to the trainer.
+        # Walks `_actor_critic` and its `_high_level_policy` (HRL setups).
+        progress = self._percent_done_fn()
+        for owner in (self._actor_critic,
+                      getattr(self._actor_critic, "_high_level_policy", None)):
+            if owner is not None and hasattr(owner, "update_aux_progress"):
+                try:
+                    owner.update_aux_progress(progress)
+                except Exception:
+                    pass
 
 
 def get_rollout_obs_space(obs_space, actor_critic, config):
