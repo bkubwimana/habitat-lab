@@ -38,9 +38,15 @@ habitat_baselines:
                 num_intent_slots: 2
                 slot_dim: 64
                 decay_half_life: 100.0
+                # Aux loss floors are non-zero so the regularising signal
+                # never fully turns off — the previous Stage 3 run collapsed
+                # at ~50M frames precisely when recon_loss_end=0.0 took effect.
                 recon_loss_start: 1.0
-                recon_loss_end: 0.0
+                recon_loss_end: 0.1
                 recon_anneal_until: 0.5
+                future_loss_start: 0.5
+                future_loss_end: 0.1
+                future_anneal_until: 0.5
       agent_1:
         hierarchical_policy:
           high_level_policy:
@@ -56,6 +62,12 @@ habitat_baselines:
                 num_intent_slots: 2
                 slot_dim: 64
                 decay_half_life: 100.0
+                # Aux loss floors are non-zero so the regularising signal
+                # never fully turns off — the previous Stage 3 run collapsed
+                # at ~50M frames precisely when recon_loss_end=0.0 took effect.
                 recon_loss_start: 1.0
-                recon_loss_end: 0.0
+                recon_loss_end: 0.1
                 recon_anneal_until: 0.5
+                future_loss_start: 0.5
+                future_loss_end: 0.1
+                future_anneal_until: 0.5

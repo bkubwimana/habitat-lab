@@ -29,8 +29,31 @@ if TYPE_CHECKING:
     from omegaconf import DictConfig
 
 
+import math
+
+
 def linear_lr_schedule(percent_done: float) -> float:
-    return 1 - percent_done
+    """Cosine warm-up + cosine decay schedule.
+
+    Replaces the literal `1 - percent_done` linear decay. The previous
+    schedule started at full base_lr from step 0, which can shock a
+    warm-started policy. This version:
+
+      * Linear ramp from 0 → base_lr over the first 5% of training
+      * Cosine decay from base_lr → 5% of base_lr over the remaining 95%
+
+    Function name kept as `linear_lr_schedule` for backward compatibility
+    with habitat-baselines' default lookup.
+    """
+    warmup_frac = 0.05
+    end_floor = 0.05
+    if percent_done <= 0:
+        return 0.0
+    if percent_done < warmup_frac:
+        return percent_done / warmup_frac
+    progress = (percent_done - warmup_frac) / (1.0 - warmup_frac)
+    progress = min(max(progress, 0.0), 1.0)
+    return end_floor + (1.0 - end_floor) * 0.5 * (1.0 + math.cos(math.pi * progress))
 
 
 @baseline_registry.register_agent_access_mgr
